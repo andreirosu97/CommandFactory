@@ -4,6 +4,7 @@
 #define PLUGIN_NAME "\\Command_Factory"
 #define EMPTY_COMMAND "N/A"
 #define MAX_SIZE 100
+const std::string tag = "{8000ff}[Command Factory]";
 
 #include <regex>
 #include <sstream>
@@ -185,7 +186,7 @@ bool findCommand(std::string cmd)
 }
 
 void __stdcall cflist(std::string params) {
-	chat_msg(0x8cff66, "{8000ff}[Command Factory]{8cff66} The list of saved commands is:");
+	chat_msg(0x8cff66, tag + "{8cff66} The list of saved commands is:");
 	int i = 1;
 	for(auto comanda: commands)
 	{
@@ -194,12 +195,22 @@ void __stdcall cflist(std::string params) {
 	}
 }
 
+void __stdcall cfhelp(std::string params) {
+	chat_msg(0xffe699, tag + "{ffe699} commands are :");
+	chat_msg(0xffe699, "1. [{FFFFFF}/cfcreate /<custom_command_name> /<in_game_command>{ffe699}].");
+	chat_msg(0xffe699, "   Creates a new custom command for you to use. Ex:{66FF8C}/cfcreate /f1 /find 1{ffe699}.");
+	chat_msg(0xffe699, "2. [{FFFFFF}/cfdelete </<custom_command_name>{ffe699}|{FFFFFF}<custom_command_name>>{ffe699}].");
+	chat_msg(0xffe699, "   Deletes a custom command defined by you. Ex:{66FF8C}/cfdelete /f1 {ffe699}or{66FF8C} /cfdelete f1{ffe699}.");
+	chat_msg(0xffe699, "3. [{FFFFFF}/cflist{ffe699}]. Displays all the available custom commands.");
+	chat_msg(0xffe699, "{ffff00}WARNING! {ffe699} You can't have more than 100 custom commands.");
+}
+
 void __stdcall cfcreate(std::string params) {
 	std::regex syntax_regex = syntaxes[__FUNCTION__].first;
 
 	if (!std::regex_match(params, syntax_regex)) {
 		std::string syntax_text = syntaxes[__FUNCTION__].second;
-		chat_msg(0xFFA500, "{8000ff}[Command Factory]{FFA500} Syntax: " + syntax_text + "!");
+		chat_msg(0xFFA500, tag + "{FFA500} Syntax: " + syntax_text + "!");
 		return;
 	}
 
@@ -210,7 +221,7 @@ void __stdcall cfcreate(std::string params) {
 
 	if (findCommand(custom_command))
 	{
-		chat_msg(0xd22d2d, "{8000ff}[Command Factory]{d22d2d} Error: Command was already created, please use [/cfdelete " + custom_command + "] and retry.");
+		chat_msg(0xd22d2d, tag + "{d22d2d} Error: Command was already created, please use [/cfdelete " + custom_command + "] and retry.");
 		return;
 	}
 
@@ -223,7 +234,7 @@ void __stdcall cfcreate(std::string params) {
 	position = findFirstFreeFunction();
 	if (position == -1)
 	{
-		chat_msg(0xd22d2d, "{8000ff}[Command Factory]{d22d2d} Maximum number of stored commands reached!");
+		chat_msg(0xd22d2d, tag + "{d22d2d} Maximum number of stored commands reached!");
 		return;
 	}
 
@@ -239,7 +250,7 @@ void __stdcall cfdelete(std::string params)
 
 	if (!std::regex_match(params, syntax_regex)) {
 		std::string syntax_text = syntaxes[__FUNCTION__].second;
-		chat_msg(0xFFA500, "{8000ff}[Command Factory]{FFA500} Syntax: " + syntax_text + "!");
+		chat_msg(0xFFA500, tag + "{FFA500} Syntax: " + syntax_text + "!");
 		return;
 	}	
 	
@@ -258,7 +269,7 @@ void __stdcall cfdelete(std::string params)
 		{
 			strcpy_s(cstr_cmd, 300, custom_command.c_str());
 			SF->getSAMP()->getInput()->UnregisterClientCommand(cstr_cmd);
-			chat_msg(0xff00bf, "{8000ff}[Command Factory]{ff00bf} Deleted [/" + (*it).first + "] --> [" + (*it).second + "]");
+			chat_msg(0xff00bf, tag + "{ff00bf} Deleted [/" + (*it).first + "] --> [" + (*it).second + "]");
 			(*it).first = EMPTY_COMMAND;
 			deleted = true;
 		}
@@ -268,13 +279,13 @@ void __stdcall cfdelete(std::string params)
 		}
 	}
 	if (!deleted)
-		chat_msg(0xd22d2d, "{8000ff}[Command Factory]{d22d2d} Error: Command was not found!");
+		chat_msg(0xd22d2d, tag + "{d22d2d} Error: Command was not found!");
 	file.close();
 }
 
 void readIniFile()
 {
-	chat_msg(0x8cff66, "{8000ff}[Command Factory]{8cff66} Initializing user defined commands...");
+	chat_msg(0x8cff66, tag + "{8cff66} Initializing user defined commands...");
 	file.open(path.c_str(), std::ios::in);
 	std::string line;
 	int position;
@@ -298,7 +309,7 @@ void readIniFile()
 		position = findFirstFreeFunction();
 		if (position == -1)
 		{
-			chat_msg(0xd22d2d, "{8000ff}[Command Factory]{d22d2d} Maximum number of stored commands reached!");
+			chat_msg(0xd22d2d, tag + "{d22d2d} Maximum number of stored commands reached!");
 			return;
 		}
 
@@ -307,14 +318,13 @@ void readIniFile()
 		SF->getSAMP()->registerChatCommand(custom_command, functions.at(position));
 	}
 	file.close();
-	chat_msg(0x8cff66, "{8000ff}[Command Factory]{8cff66} Commands successfully loaded!");
 }
 
 void writeIniFile(std::pair<std::string, std::string> cmd_pair)
 {
 	file.open(path.c_str(), std::ios::app);
 	std::string line;
-	chat_msg(0x66FF8C, "{8000ff}[Command Factory]{66FF8C} Saved [/" + cmd_pair.first + "] --> [" + cmd_pair.second + "]");
+	chat_msg(0x66FF8C, tag + "{66FF8C} Saved [/" + cmd_pair.first + "] --> [" + cmd_pair.second + "]");
 	file << "/" << cmd_pair.first << " " << cmd_pair.second << "\n";
 	file.close();
 }
@@ -338,6 +348,9 @@ void __stdcall mainloop()
 			SF->getSAMP()->registerChatCommand("cfcreate", cfcreate);
 			SF->getSAMP()->registerChatCommand("cfdelete", cfdelete);
 			SF->getSAMP()->registerChatCommand("cflist", cflist);
+			SF->getSAMP()->registerChatCommand("cfhelp", cfhelp);
+
+			chat_msg(0xFFFFFF, tag + " {8cff66}successfully loaded thanks to {FF0000}Roho{8cff66} and {FF0000}Vesca{8cff66}. Use [{40ff00}/cfhelp{8cff66}]!");
 		}
 	}
 }
